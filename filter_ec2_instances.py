@@ -52,18 +52,47 @@ def print_non_jenkins_ec2_instances(ec2_response, non_jenkins_instances, aws_reg
     fh = open(aws_region+".csv", "w")  
 
     fh.write("The instances for the region: " +  aws_region + "\n")
-    fh.write("KeyName, Instance id, ImageId, InstanceType, LaunchTime \n")
+    fh.write("Instance Name, KeyName, Instance id, ImageId, InstanceType, LaunchTime \n")
     for reservation in ec2_response["Reservations"]:
         for instance in reservation["Instances"]:
             if(instance["InstanceId"] in non_jenkins_instances):
+            
+                tag_name= False
+                tag_val = "No Name"
                 try:
                     #print(instance["KeyName"], ", ", instance["InstanceId"], ", ",  instance["ImageId"], ", ", instance["InstanceType"], ", ", instance["LaunchTime"])
-                    fh.write(instance["KeyName"]+ ", " + instance["InstanceId"] + ", " +  instance["ImageId"] + ", " +instance["InstanceType"]+ ", "+ instance["LaunchTime"].strftime('%m/%d/%Y') + "\n")
-        
-              
+                    iKeys = instance.keys()
+                    #print(iKeys)
+
+                    
+                    if ("Tags" in iKeys):
+                        #print("Instance tags are: ", instance["Tags"])
+                        tags = instance["Tags"]
+                        for tag in tags:
+                            for key, val in tag.items():
+                                #print(key, "=>", val)
+                                tag_val = val
+                                if (val=='Name'):
+                                    tag_name = True
+                                    
+                                    
+                            if (tag_name==True):
+                                print("The host name is: ", val)   
+                                break
+
+                    if (("KeyName" in iKeys) and (tag_name)):
+                        fh.write(tag_val + ", " + instance["KeyName"]+ ", " + instance["InstanceId"] + ", " +  instance["ImageId"] + ", " +instance["InstanceType"]+ ", "+ instance["LaunchTime"].strftime('%m/%d/%Y') + "\n")
+                    elif ("KeyName" in iKeys) :
+                        fh.write("No Name" + ", " + instance["KeyName"] + ", " + instance["InstanceId"] + ", " +  instance["ImageId"] + ", " +instance["InstanceType"]+ ", "+ instance["LaunchTime"].strftime('%m/%d/%Y') + "\n")
+                    elif (tag_name):
+                        fh.write(tag_val + ", " +"No Key" + ", " + instance["InstanceId"] + ", " +  instance["ImageId"] + ", " +instance["InstanceType"]+ ", "+ instance["LaunchTime"].strftime('%m/%d/%Y')+ "\n")
+                    else:
+                        fh.write("No Name" + ", " +"No Key" + ", " + instance["InstanceId"] + ", " +  instance["ImageId"] + ", " +instance["InstanceType"]+ ", "+ instance["LaunchTime"].strftime('%m/%d/%Y')+ "\n")
                 except Exception as e:
+                    print (e)
+                    raise (e)
                     #print("No Key", ", ", instance["InstanceId"], ", ",  instance["ImageId"], ", ", instance["InstanceType"], ", ", instance["LaunchTime"])
-                    fh.write("No Key" + ", " + instance["InstanceId"] + ", " +  instance["ImageId"] + ", " +instance["InstanceType"]+ ", "+ instance["LaunchTime"].strftime('%m/%d/%Y')+ "\n")
+                    #fh.write(instance["tag:Name"] + ", " +"No Key" + ", " + instance["InstanceId"] + ", " +  instance["ImageId"] + ", " +instance["InstanceType"]+ ", "+ instance["LaunchTime"].strftime('%m/%d/%Y')+ "\n")
                     #instance["Status"], instance["OwnerId"]
     fh.close()
 
