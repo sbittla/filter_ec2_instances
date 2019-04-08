@@ -13,6 +13,6 @@ Before running this command, you should be authenticated as a AWS user on the co
 
 ## Run the command
 ```
-python3 list_ec2_instances_by_age.py
-
+python3 filter_ec2_instances.py
+python3 list_elb_rds_ami_instances.py
 ```
